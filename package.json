@@ -1,0 +1,16 @@
+{
+  "name": "logar-curator",
+  "version": "1.0.0",
+  "description": "Lambda function that curates indices in an Elasticsearch cluster",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "homepage": "https://github.com/everydayhero/logar-curator",
+  "author": "Marty Zalega <marty@zalega.me>",
+  "license": "MIT",
+  "dependencies": {
+    "elasticsearch": "^10.1.3",
+    "moment": "^2.12.0"
+  }
+}
