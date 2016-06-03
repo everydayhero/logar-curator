@@ -1,6 +1,6 @@
 {
   "name": "logar-curator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Lambda function that curates indices in an Elasticsearch cluster",
   "main": "index.js",
   "scripts": {
