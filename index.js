@@ -10,25 +10,49 @@ exports.handler = function(event, context) {
     host: endpoint
   });
 
-  client.indices.getAliases().then(function(results) {
-    var indices = Object.keys(results);
-    var worklist = indices.filter(function(index) {
-      return !isExcluded(index) && isTooOld(index);
-    });
+  getIndices(client)
+    .then(extractIndices)
+    .then(filterIndices)
+    .then(deleteIndices(client))
+    .then(report(context.succeed), context.fail);
+}
 
-    if (worklist.length > 0) {
-      client.indices.delete({index: worklist}).then(function(results) {
-        context.succeed('Successfully deleted indices ' + results);
-      }, function(err) {
-        context.fail('Failed to delete indices ' + err);
+function getIndices(client) {
+  return client.indices.getAliases();
+}
+
+function extractIndices(results) {
+  return Object.keys(results);
+}
+
+function filterIndices(indices) {
+  return indices.filter(function(index) {
+    return !isExcluded(index) && isTooOld(index);
+  });
+}
+
+function deleteIndices(client) {
+  return function(indices) {
+    if (indices > 0) {
+      return client.indices.delete({index: indices}).then(function() {
+        return indices;
       });
     } else {
-      context.succeed('No indices to delete.');
+      return indices;
     }
-  }, function(err) {
-    context.fail('Failed to retrieve indices ' + err);
-  })
-};
+  };
+}
+
+function report(cb) {
+  return function(indices) {
+    var len = indices.length;
+    if (len > 0) {
+      cb("Successfully deleted " + len + " indices: " + indices.join(", "));
+    } else {
+      cb("There were no indices to delete.");
+    }
+  };
+}
 
 function isExcluded(indexName) {
   return excludedIndices.indexOf(indexName) !== -1;
