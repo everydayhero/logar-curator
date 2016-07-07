@@ -33,7 +33,7 @@ function filterIndices(indices) {
 
 function deleteIndices(client) {
   return function(indices) {
-    if (indices > 0) {
+    if (indices.length > 0) {
       return client.indices.delete({index: indices}).then(function() {
         return indices;
       });
