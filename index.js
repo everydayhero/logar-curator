@@ -9,11 +9,10 @@ var excludedIndices = (process.env.EXCLUDED_INDICES || ".kibana").split(/[ ,]/).
 var endpoint = process.env.ENDPOINT;
 var indexDate = moment.utc().subtract(+(process.env.MAX_INDEX_AGE || 14), 'days');
 
-exports.handler = function(event, context) {
+exports.handler = function(event, context, callback) {
   var client;
   if (isAWS) {
     var myCredentials = new AWS.EnvironmentCredentials('AWS');
-    console.log(myCredentials);
     client = new elasticsearch.Client({
       hosts: endpoint,
       connectionClass: require('http-aws-es'),
@@ -31,7 +30,7 @@ exports.handler = function(event, context) {
     .then(extractIndices)
     .then(filterIndices)
     .then(deleteIndices(client))
-    .then(report(context.succeed), context.fail);
+    .then(report(callback), callback);
 }
 
 function getIndices(client) {
@@ -64,7 +63,7 @@ function report(cb) {
   return function(indices) {
     var len = indices.length;
     if (len > 0) {
-      cb("Successfully deleted " + len + " indices: " + indices.join(", "));
+      cb(null, "Successfully deleted " + len + " indices: " + indices.join(", "));
     } else {
       cb("There were no indices to delete.");
     }
