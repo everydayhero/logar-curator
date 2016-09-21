@@ -33,7 +33,7 @@ function filterIndices(indices) {
 
 function deleteIndices(client) {
   return function(indices) {
-    if (indices > 0) {
+    if (indices.length > 0) {
       return client.indices.delete({index: indices}).then(function() {
         return indices;
       });
@@ -45,9 +45,8 @@ function deleteIndices(client) {
 
 function report(cb) {
   return function(indices) {
-    var len = indices.length;
-    if (len > 0) {
-      cb("Successfully deleted " + len + " indices: " + indices.join(", "));
+    if (indices.length > 0) {
+      cb("Successfully deleted " + indices.length + " indices: " + indices.join(", "));
     } else {
       cb("There were no indices to delete.");
     }
