@@ -1,20 +1,36 @@
 var moment = require("moment");
 var elasticsearch = require("elasticsearch");
 
+var isAWS = process.env.IS_AWS || false;
+if (isAWS) var AWS = require('aws-sdk');
+if (isAWS) var region = process.env.AWS_REGION || 'us-east-1';
+
 var excludedIndices = (process.env.EXCLUDED_INDICES || ".kibana").split(/[ ,]/).filter(isPresent);
 var endpoint = process.env.ENDPOINT;
 var indexDate = moment.utc().subtract(+(process.env.MAX_INDEX_AGE || 14), 'days');
 
-exports.handler = function(event, context) {
-  var client = new elasticsearch.Client({
-    host: endpoint
-  });
-
+exports.handler = function(event, context, callback) {
+  var client;
+  if (isAWS) {
+    var myCredentials = new AWS.EnvironmentCredentials('AWS');
+    client = new elasticsearch.Client({
+      hosts: endpoint,
+      connectionClass: require('http-aws-es'),
+      amazonES: {
+        region: region,
+        credentials: myCredentials
+      }
+    });
+  } else {
+    client = new elasticsearch.Client({
+      host: endpoint
+    });
+  }
   getIndices(client)
     .then(extractIndices)
     .then(filterIndices)
     .then(deleteIndices(client))
-    .then(report(context.succeed), context.fail);
+    .then(report(callback), callback);
 }
 
 function getIndices(client) {
@@ -47,7 +63,7 @@ function report(cb) {
   return function(indices) {
     var len = indices.length;
     if (len > 0) {
-      cb("Successfully deleted " + len + " indices: " + indices.join(", "));
+      cb(null, "Successfully deleted " + len + " indices: " + indices.join(", "));
     } else {
       cb("There were no indices to delete.");
     }
