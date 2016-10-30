@@ -1,13 +1,13 @@
-var moment = require("moment");
-var elasticsearch = require("elasticsearch");
+var elasticsearch = require('elasticsearch');
+var moment = require('moment');
 
-var excludedIndices = (process.env.EXCLUDED_INDICES || ".kibana").split(/[ ,]/).filter(isPresent);
 var endpoint = process.env.ENDPOINT;
+var excludedIndices = (process.env.EXCLUDED_INDICES || '.kibana').split(/[ ,]/);
 var indexDate = moment.utc().subtract(+(process.env.MAX_INDEX_AGE || 14), 'days');
 
 exports.handler = function(event, context) {
   var client = new elasticsearch.Client({
-    host: endpoint
+    host: endpoint,
   });
 
   getIndices(client)
@@ -47,9 +47,9 @@ function report(cb) {
   return function(indices) {
     var len = indices.length;
     if (len > 0) {
-      cb("Successfully deleted " + len + " indices: " + indices.join(", "));
+      cb('Successfully deleted ' + len + ' indices: ' + indices.join(', '));
     } else {
-      cb("There were no indices to delete.");
+      cb('There were no indices to delete.');
     }
   };
 }
@@ -59,10 +59,6 @@ function isExcluded(indexName) {
 }
 
 function isTooOld(indexName) {
-  var m = moment.utc(indexName, "YYYY.MM.DD");
+  var m = moment.utc(indexName, 'YYYY.MM.DD');
   return m.isBefore(indexDate);
-}
-
-function isPresent(item) {
-  return item;
 }
