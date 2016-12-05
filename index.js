@@ -1,14 +1,34 @@
+var _ = require('elasticsearch/src/lib/utils');
 var elasticsearch = require('elasticsearch');
 var moment = require('moment');
 
+var apiVersion = process.env.API_VERSION;
+var awsRegion = process.env.AWS_REGION;
 var endpoint = process.env.ENDPOINT;
 var excludedIndices = (process.env.EXCLUDED_INDICES || '.kibana').split(/[ ,]/);
 var indexDate = moment.utc().subtract(+(process.env.MAX_INDEX_AGE || 14), 'days');
 
+if (awsRegion !== undefined) {
+  var AWS = require('aws-sdk');
+}
+
 exports.handler = function(event, context) {
-  var client = new elasticsearch.Client({
+  var config = {
+    apiVersion: apiVersion,
     host: endpoint,
-  });
+  };
+
+  if (awsRegion !== undefined) {
+    config = _.deepMerge(config, {
+      amazonES: {
+        credentials: new AWS.EnvironmentCredentials('AWS'),
+        region: awsRegion,
+      },
+      connectionClass: require('http-aws-es'),
+    });
+  }
+
+  var client = new elasticsearch.Client(config);
 
   getIndices(client)
     .then(extractIndices)
