@@ -4,10 +4,12 @@ var moment = require('moment');
 var endpoint = process.env.ENDPOINT;
 var excludedIndices = (process.env.EXCLUDED_INDICES || '.kibana').split(/[ ,]/);
 var indexDate = moment.utc().subtract(+(process.env.MAX_INDEX_AGE || 14), 'days');
+var logLevel = process.env.LOG_LEVEL || 'info';
 
 exports.handler = function(event, context) {
   var client = new elasticsearch.Client({
     host: endpoint,
+    log: logLevel,
   });
 
   getIndices(client)
